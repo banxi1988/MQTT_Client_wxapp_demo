@@ -1,0 +1,15 @@
+<!--pages/connect/connect.wxml-->
+<view class="error_view" wx:if="{{error_message}}">
+  <text>{{error_message}}</text>
+</view>
+<view class="container">
+  <input bindinput='server_addr_input' disabled='true'  value='百度云天工IoT Hub-广州区'></input>
+  
+  <input bindinput='user_name_input' placeholder='user name'></input>
+  <input bindinput='user_psw_input' placeholder='user password'></input>
+  
+  <button type='primary' bindtap='btn_connect' loading="{{btn_loading}}">连接</button>
+
+  <text id="tips">可访问 iot.baidu.com 创建测试</text>
+
+</view>

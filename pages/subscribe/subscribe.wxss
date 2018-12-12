@@ -1,0 +1,36 @@
+/* pages/subscribe/subscribe.wxss */
+.swiper_tab {
+  display: flex;
+  flex-direction: row;
+  line-height: 50px;
+  border-bottom: 2px solid;
+  border-bottom-color: #777;
+}
+
+.tab_item{
+  width: 50%;
+  text-align: center;
+  font-size: 15px;
+  color: #777;
+}
+
+.on{
+  color: gray;
+  border-bottom: 1px solid gray;
+}
+
+input{
+  border: 1px solid gray;
+  width: 80%;
+  margin: 4%;
+  padding: 6px;
+}
+
+.picker{
+  width:80%;
+  border:1px solid gray;
+  margin:4%;
+  padding:6px;
+}
+
+
