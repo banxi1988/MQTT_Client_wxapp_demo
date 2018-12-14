@@ -1,72 +1,15 @@
-// pages/message/message.js
-var app = getApp();
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var mqtt_client_1 = require("../../services/mqtt_client");
 Page({
-
-  /**
-   * 页面的初始数据
-   */
-  data: {
-    message_objects:[]
-  },
-
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad: function (options) {
-    
-  },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady: function () {
-  
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow: function () {
-    //app.globalData.messages=[{topic:'summer',message:"wind"}].concat(this.data.message_objects);
-    if(app.globalData.messages!=null){
-      this.setData({
-        message_objects: app.globalData.messages
-      });
+    data: {
+        message_objects: []
+    },
+    onLoad: function (options) {
+        var _this = this;
+        mqtt_client_1.default.onMessageChanged = function (msgs) {
+            _this.setData({ message_objects: msgs });
+        };
     }
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide: function () {
-  
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload: function () {
-  
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh: function () {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom: function () {
-  
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage: function () {
-  
-  }
-})
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoibWVzc2FnZS5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIm1lc3NhZ2UudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFBQSwwREFBcUQ7QUFFckQsSUFBSSxDQUFDO0lBQ0gsSUFBSSxFQUFFO1FBQ0osZUFBZSxFQUFFLEVBQUU7S0FDcEI7SUFDRCxNQUFNLEVBQUUsVUFBUyxPQUFPO1FBQWhCLGlCQUlQO1FBSEMscUJBQVcsQ0FBQyxnQkFBZ0IsR0FBRyxVQUFBLElBQUk7WUFDakMsS0FBSSxDQUFDLE9BQVEsQ0FBQyxFQUFFLGVBQWUsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDO1FBQzNDLENBQUMsQ0FBQztJQUNKLENBQUM7Q0FDRixDQUFDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgbXF0dF9jbGllbnQgZnJvbSBcIi4uLy4uL3NlcnZpY2VzL21xdHRfY2xpZW50XCI7XG5cblBhZ2Uoe1xuICBkYXRhOiB7XG4gICAgbWVzc2FnZV9vYmplY3RzOiBbXVxuICB9LFxuICBvbkxvYWQ6IGZ1bmN0aW9uKG9wdGlvbnMpIHtcbiAgICBtcXR0X2NsaWVudC5vbk1lc3NhZ2VDaGFuZ2VkID0gbXNncyA9PiB7XG4gICAgICB0aGlzLnNldERhdGEhKHsgbWVzc2FnZV9vYmplY3RzOiBtc2dzIH0pO1xuICAgIH07XG4gIH1cbn0pO1xuIl19

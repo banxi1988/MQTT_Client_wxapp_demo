@@ -1,203 +1,77 @@
-// pages/connect/connect.js
-var app = getApp();
-var MQTT = require("../../utils/paho-mqtt.js");
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var nav_service_1 = require("../../services/nav_service");
+var mqtt_client_1 = require("../../services/mqtt_client");
 Page({
-
-  /**
-   * 页面的初始数据
-   */
-  data: {
-    server_addr: 'wxapp.mqtt.iot.gz.baidubce.com',
-    user_name: '1mvy4n5/visoar',
-    user_psw: '3LgAQr5FdTi2KyH0',
-    switch_checked:true,
-    btn_loading:false
-  },
-
-  server_addr_input:function(e){
-    console.log(e);
-    this.setData({
-      server_addr:e.detail.value
-    });
-  },
-  user_name_input: function (e) {
-    console.log(e);
-    this.setData({
-      user_name: e.detail.value
-    });
-  },
-  user_psw_input: function (e) {
-    console.log(e);
-    this.setData({
-      user_psw: e.detail.value
-    });
-  },
-  switch_change:function(e){
-    console.log(e);
-    this.setData({
-      switch_checked: e.detail.value
-    });
-  },
-  
-  btn_connect:function(){
-    //查看输入是否为空，设置错误信息
-    if(this.data.server_addr==''||this.data.server_addr==null){
-      this.setData({
-        error_message:"server address can not be empty!"
-      });
-      return;
-    }
-    if(this.data.switch_checked){
-      if (this.data.user_name == null || this.data.user_name == '') {
+    data: {
+        user_name: "1mvy4n5/visoar",
+        user_psw: "3LgAQr5FdTi2KyH0",
+        switch_checked: true,
+        btn_loading: false,
+        server_addr: ""
+    },
+    server_addr_input: function (e) {
+        console.log(e);
         this.setData({
-          error_message: "user name can not be empty!"
+            server_addr: e.detail.value
         });
-        return;
-      }
-      if (this.data.user_psw == null || this.data.user_psw == '') {
+    },
+    user_name_input: function (e) {
+        console.log(e);
         this.setData({
-          error_message: "user password can not be empty!"
+            user_name: e.detail.value
         });
-        return;
-      }
-    }
-    
-    //reset error message
-    if(this.data.error_message){
-      this.setData({
-        error_message:''
-      });
-    }
-    //在按钮上显示加载标志
-    this.setData({
-      btn_loading:true
-    });
-
-    var client = new MQTT.Client("wss://" + this.data.server_addr + "/mqtt", "clientId_" + Math.random().toString(36).substr(2));
-    var that = this;
-    //connect to  MQTT broker
-    var connectOptions = {
-      timeout: 10,
-      useSSL: true,
-      cleanSession: true,
-      keepAliveInterval: 30,
-      reconnect: true,
-      onSuccess: function () {
-        console.log('connected');
-
-        app.globalData.mqtt_client = client;
-
-        client.onMessageArrived = function (msg) {
-          /*
-          if (typeof app.globalData.onMessageArrived === 'function') {
-            return app.globalData.onMessageArrived(msg);
-          }*/
-          if(app.globalData.messages==null){
-            app.globalData.messages = [{ topic: msg.topic, message: msg.payloadString }];
-          }else{
-            app.globalData.messages =
-              [{ topic: msg.topic, message: msg.payloadString }].concat(app.globalData.messages);
-          }
-          
+    },
+    user_psw_input: function (e) {
+        console.log(e);
+        this.setData({
+            user_psw: e.detail.value
+        });
+    },
+    switch_change: function (e) {
+        console.log(e);
+        this.setData({
+            switch_checked: e.detail.value
+        });
+    },
+    showErrorMessage: function (msg) {
+        this.setData({
+            error_message: msg
+        });
+    },
+    showBtnLoading: function (show) {
+        if (show === void 0) { show = true; }
+        this.setData({ btn_loading: show });
+    },
+    btn_connect: function () {
+        var _this = this;
+        if (this.data.switch_checked) {
+            if (!this.data.user_name) {
+                this.showErrorMessage("user name can not be empty!");
+                return;
+            }
+            if (!this.data.user_psw) {
+                this.showErrorMessage("user password can not be empty!");
+                return;
+            }
         }
-
-        client.onConnectionLost = function (responseObject) {
-          if (typeof app.globalData.onConnectionLost === 'function') {
-            return app.globalData.onConnectionLost(responseObject);
-          }
-          if (responseObject.errorCode !== 0) {
-            console.log("onConnectionLost:" + responseObject.errorMessage);
-          }
-        }
-        //去除按钮上的加载标志
-        that.setData({
-          btn_loading: false
+        this.showErrorMessage("");
+        this.showBtnLoading(true);
+        mqtt_client_1.default
+            .connect({
+            userName: this.data.user_name,
+            password: this.data.user_psw
+        })
+            .then(function () {
+            nav_service_1.goSubscribeTab();
+            _this.showBtnLoading(false);
+        })
+            .catch(function (error) {
+            var err = error;
+            console.error(error);
+            wx.showModal({ title: "出错啦", content: err.errorMessage });
+            _this.showBtnLoading(false);
         });
-
-        wx.switchTab({
-          url: '../subscribe/subscribe',
-        });
-      },
-      onFailure: function (option) {
-        console.log(option);
-        //去除按钮上的加载标志
-        that.setData({
-          btn_loading: false
-        });
-        wx.showModal({
-          //title: msg.destinationName,
-          content: option.errorMessage
-        });
-      }
-    };
-    if(this.data.switch_checked){
-      connectOptions.userName = this.data.user_name;
-      connectOptions.password = this.data.user_psw;
     }
-
-    client.connect(connectOptions);
-
-  },
-
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad: function (options) {
-    
-  },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady: function () {
-  
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow: function () {
-    /*if (app.globalData.mqtt_client != null) {
-      wx.reLaunch({
-        url: '../subscribe/subscribe',
-      });
-      return;
-    }*/
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide: function () {
-  
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload: function () {
-  
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh: function () {
-  
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom: function () {
-  
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage: function () {
-  
-  }
-})
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29ubmVjdC5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbImNvbm5lY3QudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFDQSwwREFBNEQ7QUFDNUQsMERBQXFEO0FBRXJELElBQUksQ0FBQztJQUlILElBQUksRUFBRTtRQUNKLFNBQVMsRUFBRSxnQkFBZ0I7UUFDM0IsUUFBUSxFQUFFLGtCQUFrQjtRQUM1QixjQUFjLEVBQUUsSUFBSTtRQUNwQixXQUFXLEVBQUUsS0FBSztRQUNsQixXQUFXLEVBQUUsRUFBRTtLQUNoQjtJQUVELGlCQUFpQixFQUFFLFVBQVMsQ0FBQztRQUMzQixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO1FBQ2YsSUFBSSxDQUFDLE9BQVEsQ0FBQztZQUNaLFdBQVcsRUFBRSxDQUFDLENBQUMsTUFBTSxDQUFDLEtBQUs7U0FDNUIsQ0FBQyxDQUFDO0lBQ0wsQ0FBQztJQUNELGVBQWUsRUFBRSxVQUFTLENBQUM7UUFDekIsT0FBTyxDQUFDLEdBQUcsQ0FBQyxDQUFDLENBQUMsQ0FBQztRQUNmLElBQUksQ0FBQyxPQUFRLENBQUM7WUFDWixTQUFTLEVBQUUsQ0FBQyxDQUFDLE1BQU0sQ0FBQyxLQUFLO1NBQzFCLENBQUMsQ0FBQztJQUNMLENBQUM7SUFDRCxjQUFjLEVBQUUsVUFBUyxDQUFDO1FBQ3hCLE9BQU8sQ0FBQyxHQUFHLENBQUMsQ0FBQyxDQUFDLENBQUM7UUFDZixJQUFJLENBQUMsT0FBUSxDQUFDO1lBQ1osUUFBUSxFQUFFLENBQUMsQ0FBQyxNQUFNLENBQUMsS0FBSztTQUN6QixDQUFDLENBQUM7SUFDTCxDQUFDO0lBQ0QsYUFBYSxFQUFFLFVBQVMsQ0FBQztRQUN2QixPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBQyxDQUFDO1FBQ2YsSUFBSSxDQUFDLE9BQVEsQ0FBQztZQUNaLGNBQWMsRUFBRSxDQUFDLENBQUMsTUFBTSxDQUFDLEtBQUs7U0FDL0IsQ0FBQyxDQUFDO0lBQ0wsQ0FBQztJQUVELGdCQUFnQixFQUFFLFVBQVMsR0FBVztRQUNwQyxJQUFJLENBQUMsT0FBUSxDQUFDO1lBQ1osYUFBYSxFQUFFLEdBQUc7U0FDbkIsQ0FBQyxDQUFDO0lBQ0wsQ0FBQztJQUNELGNBQWMsRUFBRSxVQUFTLElBQVc7UUFBWCxxQkFBQSxFQUFBLFdBQVc7UUFFbEMsSUFBSSxDQUFDLE9BQVEsQ0FBQyxFQUFFLFdBQVcsRUFBRSxJQUFJLEVBQUUsQ0FBQyxDQUFDO0lBQ3ZDLENBQUM7SUFFRCxXQUFXLEVBQUU7UUFBQSxpQkFpQ1o7UUEzQkMsSUFBSSxJQUFJLENBQUMsSUFBSSxDQUFDLGNBQWMsRUFBRTtZQUM1QixJQUFJLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxTQUFTLEVBQUU7Z0JBQ3hCLElBQUksQ0FBQyxnQkFBZ0IsQ0FBQyw2QkFBNkIsQ0FBQyxDQUFDO2dCQUNyRCxPQUFPO2FBQ1I7WUFDRCxJQUFJLENBQUMsSUFBSSxDQUFDLElBQUksQ0FBQyxRQUFRLEVBQUU7Z0JBQ3ZCLElBQUksQ0FBQyxnQkFBZ0IsQ0FBQyxpQ0FBaUMsQ0FBQyxDQUFDO2dCQUN6RCxPQUFPO2FBQ1I7U0FDRjtRQUNELElBQUksQ0FBQyxnQkFBZ0IsQ0FBQyxFQUFFLENBQUMsQ0FBQztRQUMxQixJQUFJLENBQUMsY0FBYyxDQUFDLElBQUksQ0FBQyxDQUFDO1FBQzFCLHFCQUFXO2FBQ1IsT0FBTyxDQUFDO1lBQ1AsUUFBUSxFQUFFLElBQUksQ0FBQyxJQUFJLENBQUMsU0FBUztZQUM3QixRQUFRLEVBQUUsSUFBSSxDQUFDLElBQUksQ0FBQyxRQUFRO1NBQzdCLENBQUM7YUFDRCxJQUFJLENBQUM7WUFDSiw0QkFBYyxFQUFFLENBQUM7WUFDakIsS0FBSSxDQUFDLGNBQWMsQ0FBQyxLQUFLLENBQUMsQ0FBQztRQUM3QixDQUFDLENBQUM7YUFDRCxLQUFLLENBQUMsVUFBQSxLQUFLO1lBQ1YsSUFBTSxHQUFHLEdBQUcsS0FBa0IsQ0FBQztZQUMvQixPQUFPLENBQUMsS0FBSyxDQUFDLEtBQUssQ0FBQyxDQUFDO1lBQ3JCLEVBQUUsQ0FBQyxTQUFTLENBQUMsRUFBRSxLQUFLLEVBQUUsS0FBSyxFQUFFLE9BQU8sRUFBRSxHQUFHLENBQUMsWUFBWSxFQUFFLENBQUMsQ0FBQztZQUMxRCxLQUFJLENBQUMsY0FBYyxDQUFDLEtBQUssQ0FBQyxDQUFDO1FBQzdCLENBQUMsQ0FBQyxDQUFDO0lBQ1AsQ0FBQztDQUNGLENBQUMsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IE1RVFRFcnJvciB9IGZyb20gXCJwYWhvLW1xdHRcIjtcbmltcG9ydCB7IGdvU3Vic2NyaWJlVGFiIH0gZnJvbSBcIi4uLy4uL3NlcnZpY2VzL25hdl9zZXJ2aWNlXCI7XG5pbXBvcnQgbXF0dF9jbGllbnQgZnJvbSBcIi4uLy4uL3NlcnZpY2VzL21xdHRfY2xpZW50XCI7XG5cblBhZ2Uoe1xuICAvKipcbiAgICog6aG16Z2i55qE5Yid5aeL5pWw5o2uXG4gICAqL1xuICBkYXRhOiB7XG4gICAgdXNlcl9uYW1lOiBcIjFtdnk0bjUvdmlzb2FyXCIsXG4gICAgdXNlcl9wc3c6IFwiM0xnQVFyNUZkVGkyS3lIMFwiLFxuICAgIHN3aXRjaF9jaGVja2VkOiB0cnVlLFxuICAgIGJ0bl9sb2FkaW5nOiBmYWxzZSxcbiAgICBzZXJ2ZXJfYWRkcjogXCJcIlxuICB9LFxuXG4gIHNlcnZlcl9hZGRyX2lucHV0OiBmdW5jdGlvbihlKSB7XG4gICAgY29uc29sZS5sb2coZSk7XG4gICAgdGhpcy5zZXREYXRhISh7XG4gICAgICBzZXJ2ZXJfYWRkcjogZS5kZXRhaWwudmFsdWVcbiAgICB9KTtcbiAgfSxcbiAgdXNlcl9uYW1lX2lucHV0OiBmdW5jdGlvbihlKSB7XG4gICAgY29uc29sZS5sb2coZSk7XG4gICAgdGhpcy5zZXREYXRhISh7XG4gICAgICB1c2VyX25hbWU6IGUuZGV0YWlsLnZhbHVlXG4gICAgfSk7XG4gIH0sXG4gIHVzZXJfcHN3X2lucHV0OiBmdW5jdGlvbihlKSB7XG4gICAgY29uc29sZS5sb2coZSk7XG4gICAgdGhpcy5zZXREYXRhISh7XG4gICAgICB1c2VyX3BzdzogZS5kZXRhaWwudmFsdWVcbiAgICB9KTtcbiAgfSxcbiAgc3dpdGNoX2NoYW5nZTogZnVuY3Rpb24oZSkge1xuICAgIGNvbnNvbGUubG9nKGUpO1xuICAgIHRoaXMuc2V0RGF0YSEoe1xuICAgICAgc3dpdGNoX2NoZWNrZWQ6IGUuZGV0YWlsLnZhbHVlXG4gICAgfSk7XG4gIH0sXG4gIC8qKiog5bCB6KOF55qE5pWw5o2u5pON5L2c5pa55rOVICovXG4gIHNob3dFcnJvck1lc3NhZ2U6IGZ1bmN0aW9uKG1zZzogc3RyaW5nKSB7XG4gICAgdGhpcy5zZXREYXRhISh7XG4gICAgICBlcnJvcl9tZXNzYWdlOiBtc2dcbiAgICB9KTtcbiAgfSxcbiAgc2hvd0J0bkxvYWRpbmc6IGZ1bmN0aW9uKHNob3cgPSB0cnVlKSB7XG4gICAgLy/lnKjmjInpkq7kuIrmmL7npLrliqDovb3moIflv5dcbiAgICB0aGlzLnNldERhdGEhKHsgYnRuX2xvYWRpbmc6IHNob3cgfSk7XG4gIH0sXG5cbiAgYnRuX2Nvbm5lY3Q6IGZ1bmN0aW9uKCkge1xuICAgIC8v5p+l55yL6L6T5YWl5piv5ZCm5Li656m677yM6K6+572u6ZSZ6K+v5L+h5oGvXG4gICAgLy8gaWYgKCF0aGlzLmRhdGEuc2VydmVyX2FkZHIpIHtcbiAgICAvLyAgIHRoaXMuc2hvd0Vycm9yTWVzc2FnZShcInNlcnZlciBhZGRyZXNzIGNhbiBub3QgYmUgZW1wdHkhXCIpO1xuICAgIC8vICAgcmV0dXJuO1xuICAgIC8vIH1cbiAgICBpZiAodGhpcy5kYXRhLnN3aXRjaF9jaGVja2VkKSB7XG4gICAgICBpZiAoIXRoaXMuZGF0YS51c2VyX25hbWUpIHtcbiAgICAgICAgdGhpcy5zaG93RXJyb3JNZXNzYWdlKFwidXNlciBuYW1lIGNhbiBub3QgYmUgZW1wdHkhXCIpO1xuICAgICAgICByZXR1cm47XG4gICAgICB9XG4gICAgICBpZiAoIXRoaXMuZGF0YS51c2VyX3Bzdykge1xuICAgICAgICB0aGlzLnNob3dFcnJvck1lc3NhZ2UoXCJ1c2VyIHBhc3N3b3JkIGNhbiBub3QgYmUgZW1wdHkhXCIpO1xuICAgICAgICByZXR1cm47XG4gICAgICB9XG4gICAgfVxuICAgIHRoaXMuc2hvd0Vycm9yTWVzc2FnZShcIlwiKTtcbiAgICB0aGlzLnNob3dCdG5Mb2FkaW5nKHRydWUpO1xuICAgIG1xdHRfY2xpZW50XG4gICAgICAuY29ubmVjdCh7XG4gICAgICAgIHVzZXJOYW1lOiB0aGlzLmRhdGEudXNlcl9uYW1lLFxuICAgICAgICBwYXNzd29yZDogdGhpcy5kYXRhLnVzZXJfcHN3XG4gICAgICB9KVxuICAgICAgLnRoZW4oKCkgPT4ge1xuICAgICAgICBnb1N1YnNjcmliZVRhYigpO1xuICAgICAgICB0aGlzLnNob3dCdG5Mb2FkaW5nKGZhbHNlKTtcbiAgICAgIH0pXG4gICAgICAuY2F0Y2goZXJyb3IgPT4ge1xuICAgICAgICBjb25zdCBlcnIgPSBlcnJvciBhcyBNUVRURXJyb3I7XG4gICAgICAgIGNvbnNvbGUuZXJyb3IoZXJyb3IpO1xuICAgICAgICB3eC5zaG93TW9kYWwoeyB0aXRsZTogXCLlh7rplJnllaZcIiwgY29udGVudDogZXJyLmVycm9yTWVzc2FnZSB9KTtcbiAgICAgICAgdGhpcy5zaG93QnRuTG9hZGluZyhmYWxzZSk7XG4gICAgICB9KTtcbiAgfVxufSk7XG4iXX0=

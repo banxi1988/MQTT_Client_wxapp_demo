@@ -1,16 +1,22 @@
 {
-	"description": "项目配置文件。",
+	"description": "MQTT Client",
 	"setting": {
 		"urlCheck": true,
-		"es6": true,
+		"es6": false,
 		"postcss": true,
 		"minified": true,
-		"newFeature": true
+		"newFeature": true,
+		"nodeModules": true
 	},
 	"compileType": "miniprogram",
 	"libVersion": "2.2.4",
 	"appid": "wxee82798afce757d1",
 	"projectname": "MQTT%E5%AE%A2%E6%88%B7%E7%AB%AF",
+	"scripts": {
+		"beforeCompile": "npm run compile",
+		"beforePreview": "npm run compile",
+		"beforeUpload": "npm run compile"
+	},
 	"condition": {
 		"search": {
 			"current": -1,
