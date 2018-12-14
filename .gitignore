@@ -14,3 +14,4 @@ yarn-error.log*
 .awcache/
 scripts/stub*
 *.js
+!vendors/*.js

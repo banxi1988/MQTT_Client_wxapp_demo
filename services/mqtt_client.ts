@@ -1,5 +1,5 @@
-import MQTT = require("paho-mqtt");
-
+import MQTT = require("../vendors/paho-mqtt");
+//  "paho-mqtt": "https://github.com/tennessine/paho.mqtt.wxapp.git"
 interface SimpleMsg {
   topic: string;
   message: string;
@@ -9,7 +9,8 @@ class MQTTClient {
   client: MQTT.Client;
   messages: SimpleMsg[] = [];
   onMessageChanged: ((messages: SimpleMsg[]) => void) | null = null;
-  constructor(hostUrl: string) {
+  constructor(serverAddr: string) {
+    const hostUrl = `wss://${serverAddr}/mqtt`;
     const clientId =
       "clientId_" +
       Math.random()
@@ -40,8 +41,7 @@ class MQTTClient {
 
   connect(options: { userName: string; password: string }) {
     return new Promise((resolve, reject) => {
-      const connectOptions = {
-        ...options,
+      const connectOptions = Object.assign(options, {
         timeout: 10,
         useSSL: true,
         cleanSession: true,
@@ -49,7 +49,7 @@ class MQTTClient {
         reconnect: true,
         onSuccess: resolve,
         onFailure: reject
-      };
+      });
       this.client.connect(connectOptions);
     });
   }
